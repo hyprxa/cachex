@@ -11,7 +11,7 @@ authors = [
     { name = "Chris Newville", email = "christopher.newville@hyprxa.io" },
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Framework :: AsyncIO",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
