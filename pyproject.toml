@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cacheplus"
-description = "Simple and elegant caching solution."
+description = "Production ready caching"
 license = "MIT"
 requires-python = ">=3.8,<4.0"
 authors = [
