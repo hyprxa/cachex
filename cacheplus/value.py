@@ -33,6 +33,35 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger("cacheplus.value")
 
 
+def _wrap_factory(storage_factory: Callable[[], Storage]) -> Callable[[str], Storage]:
+    """Wraps a storage factory and returns the factory but accepts an
+    additional string argument as a unique key for different partials.
+    """
+    @functools.wraps(storage_factory)
+    def wrapper(factory_key: str | None) -> Storage:
+        storage = storage_factory()
+        _LOGGER.debug("Created new storage instance for key: %s", factory_key)
+        return storage
+    return wrapper
+
+
+def _wrap_async_factory(
+    storage_factory: Callable[[], AsyncStorage | Awaitable[AsyncStorage]]
+) -> Callable[[str], Awaitable[AsyncStorage]]:
+    """Wraps a storage factory and returns the factory but accepts an
+    additional string argument as a unique key for different partials.
+    """
+    @functools.wraps(storage_factory)
+    async def wrapper(factory_key: str | None) -> Storage:
+        if inspect.iscoroutinefunction(storage_factory):
+            storage = await storage_factory()
+        else:
+            storage = storage_factory()
+        _LOGGER.debug("Created new storage instance for key: %s", factory_key)
+        return storage
+    return wrapper
+    
+
 class _NullLock:
     def __enter__(self) -> None:
         pass
@@ -53,17 +82,12 @@ class cache_value:
 
     Every caller gets its own copy of the cached value.
 
-    This decorator works with sync functions. By default, calls are not serialized
-    so it is possible for a function called concurrently with identical arguments
-    to run more than once. In the majority of cases this behavior is acceptable because
-    function calls with identical arguments will usually produce identical values
-    and the side effect of overwriting an already cached value is minimal. This
-    then allows two function calls with different arguments to run concurrently
-    which can be more performant. However if calling a function with identical arguments
-    at different points in time produces different results (for example, a database
-    query may produce two different result sets if the data was updated between
-    queries) and the inconsistency is not acceptable, you can serialize
-    calls to the decorated function by setting ``serialize`` to ``True``.
+    This decorator works with sync functions.
+    
+    By default, calls can execute concurrently so it is possible for a function called
+    concurrently with identical arguments to run more than once. If this behavior is not
+    acceptable for your use case, you can force concurrent calls to be executed serially
+    by setting ``allow_concurrent`` to ``False``.
 
     Args:
         storage_factory: A callable that returns a
@@ -73,7 +97,15 @@ class cache_value:
         type_encoders: A mapping of types to callables that transform them
             into ``bytes``
         expires_in: Time in seconds before the data is considered expired
-        serialize: Serialize calls to this function
+        allow_concurrent: If ``False`` force concurrent calls to be executed serially.
+            Defaults to ``True``
+        factory_key: Differentiate different storage factories across decorated functions.
+            Factories have to be zero argument callables and these are wrapped in a call to
+            :function: `cacheplus.cache_reference`. Because of this, partial functions with
+            different arguments produce the same hash. The factory key is a way to explicitely
+            differentiate the same factory function with different arguments. The factory key
+            is not passed to the factory function, the factory function must still be a zero
+            argument callable
     """
 
     def __init__(
@@ -81,14 +113,15 @@ class cache_value:
         storage_factory: Callable[[], Storage] = memory_storage_factory(),
         type_encoders: Mapping[type, Callable[[Any], bytes]] | None = None,
         expires_in: int | timedelta | None = None,
-        serialize: bool = False,
+        allow_concurrent: bool = True,
+        factory_key: str | None = None,
     ) -> None:
         self._factory = cast(
-            "Callable[[], Storage]", cache_reference()(storage_factory)
+            "Callable[[], Storage]", cache_reference()(_wrap_factory(storage_factory))
         )
         self._type_encoders = type_encoders
         self._expires_in = expires_in
-        self._serialize = serialize
+        self._serialize = not allow_concurrent
 
         self._storage: Storage | None = None
 
@@ -158,17 +191,12 @@ class async_cache_value:
 
     Every caller gets its own copy of the cached value.
 
-    This decorator works with async functions. By default, calls are not serialized
-    so it is possible for a function called concurrently with identical arguments
-    to run more than once. In the majority of cases this behavior is acceptable because
-    function calls with identical arguments will usually produce identical values
-    and the side effect of overwriting an already cached value is minimal. This
-    then allows two function calls with different arguments to run concurrently
-    which can be more performant. However if calling a function with identical arguments
-    at different points in time produces different results (for example, a database
-    query may produce two different result sets if the data was updated between
-    queries) and the inconsistency is not acceptable, you can serialize
-    calls to the decorated function by setting ``serialize`` to ``True``.
+    This decorator works with async functions.
+
+    By default, calls can execute concurrently so it is possible for a function called
+    concurrently with identical arguments to run more than once. If this behavior is not
+    acceptable for your use case, you can force concurrent calls to be executed serially
+    by setting ``allow_concurrent`` to ``False``.
 
     Args:
         storage_factory: A callable that returns a
@@ -178,7 +206,15 @@ class async_cache_value:
         type_encoders: A mapping of types to callables that transform them
             into ``bytes``
         expires_in: Time in seconds before the data is considered expired
-        serialize: Serialize calls to this function
+        allow_concurrent: If ``False`` force concurrent calls to be executed serially.
+            Defaults to ``True``
+        factory_key: Differentiate different storage factories across decorated functions.
+            Factories have to be zero argument callables and these are wrapped in a call to
+            :function: `cacheplus.cache_reference`. Because of this, partial functions with
+            different arguments produce the same hash. The factory key is a way to explicitely
+            differentiate the same factory function with different arguments. The factory key
+            is not passed to the factory function, the factory function must still be a zero
+            argument callable
     """
 
     def __init__(
@@ -188,12 +224,12 @@ class async_cache_value:
         ] = async_memory_storage_factory(),
         type_encoders: Mapping[type, Callable[[Any], bytes]] | None = None,
         expires_in: int | timedelta | None = None,
-        serialize: bool = False,
+        allow_concurrent: bool = True,
     ) -> None:
-        self._factory = cache_reference()(storage_factory)
+        self._factory = cache_reference()(_wrap_async_factory(storage_factory))
         self._type_encoders = type_encoders
         self._expires_in = expires_in
-        self._serialize = serialize
+        self._serialize = not allow_concurrent
 
         self._storage: AsyncStorage | None = None
         self._is_async = inspect.iscoroutinefunction(self._factory)
