@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, TYPE_CHECKING
+from datetime import datetime, timedelta, UTC
+from typing import Generic, TypeVar, TYPE_CHECKING
 
 
 __all__ = ("Storage", "AsyncStorage")
@@ -134,13 +134,13 @@ class StoredObject(Generic[T]):
             raise ValueError("'expires_in' must be greater than 0")
         return cls(
             data=data,
-            expires_at=(datetime.utcnow() + expires_in) if expires_in else None,
+            expires_at=(datetime.now(UTC) + expires_in) if expires_in else None,
         )
 
     @property
     def expired(self) -> bool:
         """Return ``True`` if the :class:`StorageObject` is expired."""
-        return self.expires_at is not None and datetime.utcnow() >= self.expires_at
+        return self.expires_at is not None and datetime.now(UTC) >= self.expires_at
 
 
 # A stored object typed for bytes only
