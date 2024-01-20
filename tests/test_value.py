@@ -122,7 +122,7 @@ def test_concurrent_calls_can_be_serialized():
     """Tests that concurrent calls to a cached function can be serialized."""
     mock = MagicMock(return_value="pickleable")
 
-    @cache_value(serialize=True)
+    @cache_value(allow_concurrent=False)
     def call_mock():
         time.sleep(0.1)
         return mock()
@@ -142,7 +142,7 @@ async def test_concurrent_calls_can_be_serialized_async():
     """Tests that concurrent calls to a cached function can be serialized."""
     mock = MagicMock(return_value="pickleable")
 
-    @async_cache_value(serialize=True)
+    @async_cache_value(allow_concurrent=False)
     async def call_mock():
         await asyncio.sleep(0.1)
         return mock()
@@ -272,3 +272,96 @@ async def test_type_encoders_async():
 
     assert result_1 == result_2
     mock.assert_called_once_with(conn)
+
+
+def test_factory_key():
+    """Tests that the same storage factory can produce different storage instances
+    by providing a factory key.
+    """
+    from cacheplus.factories import memory_storage_factory
+    def mock_storage_factory(mock: MagicMock):
+        def wrapper():
+            mock()
+            return memory_storage_factory()()
+        return wrapper
+    
+    mock = MagicMock()
+    cache_mock = MagicMock()
+
+    @cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_1"
+    )
+    def echo_1(i: int) -> int:
+        cache_mock(i)
+        return i
+
+    @cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_2"
+    )
+    def echo_2(i: int) -> int:
+        cache_mock(i)
+        return i
+    
+    @cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_2"
+    )
+    def echo_3(i: int) -> int:
+        cache_mock(i)
+        return i
+    
+    echo_1(1)
+    echo_2(2)
+    echo_3(3)
+
+    assert cache_mock.call_count == 3
+    assert mock.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_factory_key_async():
+    """Tests that the same storage factory can produce different storage instances
+    by providing a factory key.
+    """
+    from cacheplus.factories import async_memory_storage_factory
+    def mock_storage_factory(mock: MagicMock):
+        async def wrapper():
+            mock()
+            return async_memory_storage_factory()()
+        return wrapper
+    
+    mock = MagicMock()
+    cache_mock = MagicMock()
+
+    @async_cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_1"
+    )
+    async def echo_1(i: int) -> int:
+        cache_mock(i)
+        return i
+
+    @async_cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_2"
+    )
+    async def echo_2(i: int) -> int:
+        cache_mock(i)
+        return i
+    
+    @async_cache_value(
+        storage_factory=mock_storage_factory(mock),
+        factory_key="memcache_2"
+    )
+    async def echo_3(i: int) -> int:
+        cache_mock(i)
+        return i
+    
+    await echo_1(1)
+    await echo_2(2)
+    await echo_3(3)
+
+    assert cache_mock.call_count == 3
+    assert mock.call_count == 2

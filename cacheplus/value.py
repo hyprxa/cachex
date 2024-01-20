@@ -37,7 +37,7 @@ def _wrap_factory(storage_factory: Callable[[], Storage]) -> Callable[[str], Sto
     """Wraps a storage factory and returns the factory but accepts an
     additional string argument as a unique key for different partials.
     """
-    @functools.wraps(storage_factory)
+    print(storage_factory)
     def wrapper(factory_key: str | None) -> Storage:
         storage = storage_factory()
         _LOGGER.debug("Created new storage instance for key: %s", factory_key)
@@ -51,7 +51,6 @@ def _wrap_async_factory(
     """Wraps a storage factory and returns the factory but accepts an
     additional string argument as a unique key for different partials.
     """
-    @functools.wraps(storage_factory)
     async def wrapper(factory_key: str | None) -> Storage:
         if inspect.iscoroutinefunction(storage_factory):
             storage = await storage_factory()
@@ -117,11 +116,12 @@ class cache_value:
         factory_key: str | None = None,
     ) -> None:
         self._factory = cast(
-            "Callable[[], Storage]", cache_reference()(_wrap_factory(storage_factory))
+            "Callable[[str | None], Storage]", cache_reference()(_wrap_factory(storage_factory))
         )
         self._type_encoders = type_encoders
         self._expires_in = expires_in
         self._serialize = not allow_concurrent
+        self._factory_key = factory_key
 
         self._storage: Storage | None = None
 
@@ -142,7 +142,7 @@ class cache_value:
             # This ``None`` value check is faster than acquiring the two
             # locks required for ``cache_reference``
             if self._storage is None:
-                storage = self._factory()
+                storage = self._factory(self._factory_key)
                 self._storage = storage
             else:
                 storage = self._storage
@@ -225,11 +225,16 @@ class async_cache_value:
         type_encoders: Mapping[type, Callable[[Any], bytes]] | None = None,
         expires_in: int | timedelta | None = None,
         allow_concurrent: bool = True,
+        factory_key: str | None = None,
     ) -> None:
-        self._factory = cache_reference()(_wrap_async_factory(storage_factory))
+        self._factory = cast(
+            "Callable[[str | None], Storage | Awaitable[Storage]]",
+            cache_reference()(_wrap_async_factory(storage_factory)),
+        )
         self._type_encoders = type_encoders
         self._expires_in = expires_in
         self._serialize = not allow_concurrent
+        self._factory_key = factory_key
 
         self._storage: AsyncStorage | None = None
         self._is_async = inspect.iscoroutinefunction(self._factory)
@@ -252,9 +257,9 @@ class async_cache_value:
             # locks required for ``cache_reference``
             if self._storage is None:
                 if self._is_async:
-                    storage = await self._factory()  # type: ignore[misc]
+                    storage = await self._factory(self._factory_key)  # type: ignore[misc]
                 else:
-                    storage = self._factory()
+                    storage = self._factory(self._factory_key)
                 self._storage = cast("AsyncStorage", storage)
             else:
                 storage = self._storage
