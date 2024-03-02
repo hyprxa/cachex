@@ -18,11 +18,11 @@ try:
 except ImportError:
     raise RuntimeError(
         "Missing required dependencies: motor, pymongo. "
-        "Run `pip install 'cacheplus[mongo]'`"
+        "Run `pip install 'cachex[mongo]'`"
     )
 
-from cacheplus.exceptions import ImproperlyConfiguredException
-from cacheplus.storage.base import AsyncStorage, Storage, StoredValue
+from cachex.exceptions import ImproperlyConfiguredException
+from cachex.storage.base import AsyncStorage, Storage, StoredValue
 
 
 __all__ = ("MongoStorage", "AsyncMongoStorage")
@@ -134,8 +134,8 @@ class _MongoCommon:
         max_failures: int = MAX_FAILURES,
     ) -> None:
         self._mongo = mongo
-        self.collection: str = "cacheplus" if collection is None else collection
-        self.key_prefix: str = "cacheplus" if key_prefix is None else key_prefix
+        self.collection: str = "cachex" if collection is None else collection
+        self.key_prefix: str = "cachex" if key_prefix is None else key_prefix
         self._max_backoff = max_backoff
         self._base_backoff = base_backoff
         self._max_failures = max_failures

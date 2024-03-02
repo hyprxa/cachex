@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import anyio
 
-from cacheplus.storage.base import AsyncStorage, Storage, StoredValue
+from cachex.storage.base import AsyncStorage, Storage, StoredValue
 
 
 __all__ = ("MemoryStorage", "AsyncMemoryStorage")

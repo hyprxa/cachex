@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from cacheplus.storage.file import AsyncFileStorage, FileStorage
+from cachex.storage.file import AsyncFileStorage, FileStorage
 
 
 def test_set_get():

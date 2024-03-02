@@ -9,15 +9,15 @@ from typing import Any, TypeVar, cast, TYPE_CHECKING
 
 import anyio
 
-from cacheplus.exceptions import (
+from cachex.exceptions import (
     CacheError,
     ImproperlyConfiguredException,
     UnserializableReturnValueError,
 )
-from cacheplus.factories import async_memory_storage_factory, memory_storage_factory
-from cacheplus.ref import cache_reference
-from cacheplus.storage.base import AsyncStorage, Storage
-from cacheplus._core import make_function_key, make_value_key
+from cachex.factories import async_memory_storage_factory, memory_storage_factory
+from cachex.ref import cache_reference
+from cachex.storage.base import AsyncStorage, Storage
+from cachex._core import make_function_key, make_value_key
 
 
 __all__ = ("cache_value", "async_cache_value")
@@ -30,14 +30,13 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
     R = TypeVar("R")
 
-_LOGGER = logging.getLogger("cacheplus.value")
+_LOGGER = logging.getLogger("cachex.value")
 
 
 def _wrap_factory(storage_factory: Callable[[], Storage]) -> Callable[[str], Storage]:
     """Wraps a storage factory and returns the factory but accepts an
     additional string argument as a unique key for different partials.
     """
-    print(storage_factory)
     def wrapper(factory_key: str | None) -> Storage:
         storage = storage_factory()
         _LOGGER.debug("Created new storage instance for key: %s", factory_key)
@@ -45,7 +44,7 @@ def _wrap_factory(storage_factory: Callable[[], Storage]) -> Callable[[str], Sto
     return wrapper
 
 
-def _wrap_async_factory(
+def _wrap_factory_async(
     storage_factory: Callable[[], AsyncStorage | Awaitable[AsyncStorage]]
 ) -> Callable[[str], Awaitable[AsyncStorage]]:
     """Wraps a storage factory and returns the factory but accepts an
@@ -90,8 +89,8 @@ class cache_value:
 
     Args:
         storage_factory: A callable that returns a
-            :class:`Storage <cacheplus.storage.base.Storage>` instance. The
-            callable is wrapped in :func:`cache_reference <cacheplus.ref.cache_reference>`
+            :class:`Storage <cachex.storage.base.Storage>` instance. The
+            callable is wrapped in :func:`cache_reference <cachex.ref.cache_reference>`
             creating a singleton
         type_encoders: A mapping of types to callables that transform them
             into ``bytes``
@@ -100,7 +99,7 @@ class cache_value:
             Defaults to ``True``
         factory_key: Differentiate different storage factories across decorated functions.
             Factories have to be zero argument callables and these are wrapped in a call to
-            :function: `cacheplus.cache_reference`. Because of this, partial functions with
+            :function: `cachex.cache_reference`. Because of this, partial functions with
             different arguments produce the same hash. The factory key is a way to explicitely
             differentiate the same factory function with different arguments. The factory key
             is not passed to the factory function, the factory function must still be a zero
@@ -116,7 +115,8 @@ class cache_value:
         factory_key: str | None = None,
     ) -> None:
         self._factory = cast(
-            "Callable[[str | None], Storage]", cache_reference()(_wrap_factory(storage_factory))
+            "Callable[[str | None], Storage]",
+            cache_reference()(_wrap_factory(storage_factory))
         )
         self._type_encoders = type_encoders
         self._expires_in = expires_in
@@ -200,8 +200,8 @@ class async_cache_value:
 
     Args:
         storage_factory: A callable that returns a
-            :class:`AsyncStorage <cacheplus.storage.base.AsyncStorage>` instance. The
-            callable is wrapped in :func:`cache_reference <cacheplus.ref.cache_reference>`
+            :class:`AsyncStorage <cachex.storage.base.AsyncStorage>` instance. The
+            callable is wrapped in :func:`cache_reference <cachex.ref.cache_reference>`
             creating a singleton
         type_encoders: A mapping of types to callables that transform them
             into ``bytes``
@@ -210,7 +210,7 @@ class async_cache_value:
             Defaults to ``True``
         factory_key: Differentiate different storage factories across decorated functions.
             Factories have to be zero argument callables and these are wrapped in a call to
-            :function: `cacheplus.cache_reference`. Because of this, partial functions with
+            :function: `cachex.cache_reference`. Because of this, partial functions with
             different arguments produce the same hash. The factory key is a way to explicitely
             differentiate the same factory function with different arguments. The factory key
             is not passed to the factory function, the factory function must still be a zero
@@ -228,8 +228,8 @@ class async_cache_value:
         factory_key: str | None = None,
     ) -> None:
         self._factory = cast(
-            "Callable[[str | None], Storage | Awaitable[Storage]]",
-            cache_reference()(_wrap_async_factory(storage_factory)),
+            "Callable[[str | None], Awaitable[Storage]]",
+            cache_reference()(_wrap_factory_async(storage_factory)),
         )
         self._type_encoders = type_encoders
         self._expires_in = expires_in

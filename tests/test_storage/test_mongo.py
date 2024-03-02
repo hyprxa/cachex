@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from cacheplus import async_mongo_storage_factory, mongo_storage_factory
+from cachex import async_mongo_storage_factory, mongo_storage_factory
 
 
 def test_set_get():

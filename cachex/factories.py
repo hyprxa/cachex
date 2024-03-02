@@ -18,22 +18,22 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from os import PathLike
 
-    from cacheplus.storage.file import AsyncFileStorage, FileStorage
-    from cacheplus.storage.memory import AsyncMemoryStorage, MemoryStorage
-    from cacheplus.storage.mongo import AsyncMongoStorage, MongoStorage
-    from cacheplus.storage.redis import AsyncRedisStorage, RedisStorage
+    from cachex.storage.file import AsyncFileStorage, FileStorage
+    from cachex.storage.memory import AsyncMemoryStorage, MemoryStorage
+    from cachex.storage.mongo import AsyncMongoStorage, MongoStorage
+    from cachex.storage.redis import AsyncRedisStorage, RedisStorage
 
 
 def memory_storage_factory() -> Callable[[], MemoryStorage]:
-    """Storage factory for :class: `MemoryStorage <cacacheplus.storage.memory.MemoryStorage>`"""
-    from cacheplus.storage.memory import MemoryStorage
+    """Storage factory for :class: `MemoryStorage <cacachex.storage.memory.MemoryStorage>`"""
+    from cachex.storage.memory import MemoryStorage
 
     return lambda: MemoryStorage()
 
 
 def async_memory_storage_factory() -> Callable[[], AsyncMemoryStorage]:
-    """Storage factory for :class: `AsyncMemoryStorage <cacacheplus.storage.memory.AsyncMemoryStorage>`"""
-    from cacheplus.storage.memory import AsyncMemoryStorage
+    """Storage factory for :class: `AsyncMemoryStorage <cacachex.storage.memory.AsyncMemoryStorage>`"""
+    from cachex.storage.memory import AsyncMemoryStorage
 
     return lambda: AsyncMemoryStorage()
 
@@ -41,8 +41,8 @@ def async_memory_storage_factory() -> Callable[[], AsyncMemoryStorage]:
 def file_storage_factory(
     path: PathLike[str], key_prefix: str | None = None
 ) -> Callable[[], FileStorage]:
-    """Storage factory for :class: `FileStorage <cacacheplus.storage.file.FileStorage>`"""
-    from cacheplus.storage.file import FileStorage
+    """Storage factory for :class: `FileStorage <cacachex.storage.file.FileStorage>`"""
+    from cachex.storage.file import FileStorage
 
     return lambda: FileStorage(path=path, key_prefix=key_prefix)
 
@@ -50,8 +50,8 @@ def file_storage_factory(
 def async_file_storage_factory(
     path: PathLike[str], key_prefix: str | None = None
 ) -> Callable[[], AsyncFileStorage]:
-    """Storage factory for :class: `AsyncFileStorage <cacacheplus.storage.file.AsyncFileStorage>`"""
-    from cacheplus.storage.file import AsyncFileStorage
+    """Storage factory for :class: `AsyncFileStorage <cacachex.storage.file.AsyncFileStorage>`"""
+    from cachex.storage.file import AsyncFileStorage
 
     return lambda: AsyncFileStorage(path=path, key_prefix=key_prefix)
 
@@ -65,7 +65,7 @@ def mongo_storage_factory(
     max_failures: int | None = None,
     **client_kwargs: Any,
 ) -> Callable[[], MongoStorage]:
-    """Storage factory for :class: `MongoStorage <cacacheplus.storage.mongo.MongoStorage>`
+    """Storage factory for :class: `MongoStorage <cacachex.storage.mongo.MongoStorage>`
 
     Args:
         url: MongoDB url to connect to
@@ -79,7 +79,7 @@ def mongo_storage_factory(
             :class:`pymongo.MongoClient` constructor
     """
     from pymongo import MongoClient
-    from cacheplus.storage.mongo import (
+    from cachex.storage.mongo import (
         MongoStorage,
         DEFAULT_BASE,
         DEFAULT_CAP,
@@ -113,7 +113,7 @@ def async_mongo_storage_factory(
     max_failures: int | None = None,
     **client_kwargs: Any,
 ) -> Callable[[], AsyncMongoStorage]:
-    """Storage factory for :class: `AsyncMongoStorage <cacacheplus.storage.mongo.AsyncMongoStorage>`
+    """Storage factory for :class: `AsyncMongoStorage <cacachex.storage.mongo.AsyncMongoStorage>`
 
     Args:
         url: MongoDB url to connect to
@@ -128,7 +128,7 @@ def async_mongo_storage_factory(
     """
     from motor.core import AgnosticClient
     from motor.motor_asyncio import AsyncIOMotorClient
-    from cacheplus.storage.mongo import (
+    from cachex.storage.mongo import (
         AsyncMongoStorage,
         DEFAULT_BASE,
         DEFAULT_CAP,
@@ -158,7 +158,7 @@ def redis_storage_factory(
     key_prefix: str | None = None,
     **client_kwargs: Any,
 ) -> Callable[[], RedisStorage]:
-    """Storage factory for :class: `RedisStorage <cacacheplus.storage.redis.RedisStorage>`
+    """Storage factory for :class: `RedisStorage <cacachex.storage.redis.RedisStorage>`
 
     Args:
         url: Redis url to connect to
@@ -167,7 +167,7 @@ def redis_storage_factory(
             :method:`redis.Redis.from_url` classmethod
     """
     from redis import Redis
-    from cacheplus.storage.redis import RedisStorage
+    from cachex.storage.redis import RedisStorage
 
     def wrapper() -> RedisStorage:
         redis = Redis.from_url(url, **client_kwargs)
@@ -181,7 +181,7 @@ def async_redis_storage_factory(
     key_prefix: str | None = None,
     **client_kwargs: Any,
 ) -> Callable[[], AsyncRedisStorage]:
-    """Storage factory for :class: `AsyncRedisStorage <cacacheplus.storage.redis.AsyncRedisStorage>`
+    """Storage factory for :class: `AsyncRedisStorage <cacachex.storage.redis.AsyncRedisStorage>`
 
     Args:
         url: Redis url to connect to
@@ -190,7 +190,7 @@ def async_redis_storage_factory(
             :method:`redis.asyncio.Redis.from_url` classmethod
     """
     from redis.asyncio import Redis
-    from cacheplus.storage.redis import AsyncRedisStorage
+    from cachex.storage.redis import AsyncRedisStorage
 
     def wrapper() -> AsyncRedisStorage:
         redis = Redis.from_url(url, **client_kwargs)

@@ -3,15 +3,15 @@ requires = ["hatchling", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cacheplus"
-description = "Production ready caching"
+name = "cachex"
+description = "Simple, Flexible, and Extensible caching utility for modern applications"
 license = "MIT"
 requires-python = ">=3.8,<4.0"
 authors = [
     { name = "Chris Newville", email = "christopher.newville@hyprxa.io" },
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Framework :: AsyncIO",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -26,21 +26,19 @@ dependencies = ["anyio"]
 dynamic = ["readme", "version"]
 
 [project.optional-dependencies]
-mongo = ["motor", "pymongo"]
-redis = ["redis"]
+mongo = ["motor"]
+redis = ["redis[hiredis]"]
 
 [project.urls]
-Changelog = "https://github.com/hyprxa/cacheplus/blob/master/CHANGELOG.md"
-Homepage = "https://github.com/hyprxa/cacheplus"
-Source = "https://github.com/hyprxa/cacheplus"
+Homepage = "https://github.com/hyprxa/cachex"
+Source = "https://github.com/hyprxa/cachex"
 
 [tool.hatch.version]
-path = "cacheplus/__version__.py"
+path = "cachex/__version__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/cacheplus",
-    "/CHANGELOG.md",
+    "/cachex",
     "/README.md",
     "/tests",
 ]
@@ -53,9 +51,3 @@ path = "README.md"
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 text = "\n## Release Information\n\n"
-
-[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
-path = "CHANGELOG.md"
-
-[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
-text = "\n---\n\n[Full changelog](https://github.com/hyprxa/cacheplus/blob/master/CHANGELOG.md)\n"

@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from cacheplus import async_redis_storage_factory, redis_storage_factory
+from cachex import async_redis_storage_factory, redis_storage_factory
 
 
 def test_set_get():

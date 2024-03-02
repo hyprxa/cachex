@@ -8,7 +8,7 @@ from typing import Any, TypeVar, TYPE_CHECKING
 
 import anyio
 
-from cacheplus._core import make_function_key, make_value_key
+from cachex._core import make_function_key, make_value_key
 
 
 __all__ = ("cache_reference", "get_references")
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
     R = TypeVar("R")
 
-_LOGGER = logging.getLogger("cacheplus.ref")
+_LOGGER = logging.getLogger("cachex.ref")
 
 _lock = threading.Lock()
 _ref_storage: dict[str, Any] = {}
@@ -31,7 +31,7 @@ def cache_reference(
 ) -> Callable[[Callable[P, R | Awaitable[R]]], Callable[P, R | Awaitable[R]]]:
     """Cache a reference to the return object of the decorated callable.
 
-    Object are shared across all threads in the application. These objects must
+    Objects are shared across all threads in the application. These objects must
     be thread-safe, because they can be accessed from multiple threads concurrently.
 
     This decorator works with both sync and async functions. Calls are serialized

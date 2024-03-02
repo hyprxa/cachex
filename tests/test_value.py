@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cacheplus import async_cache_value, cache_value
-from cacheplus.exceptions import (
+from cachex import async_cache_value, cache_value
+from cachex.exceptions import (
     UnhashableParamError,
     UnserializableReturnValueError,
 )
@@ -278,7 +278,7 @@ def test_factory_key():
     """Tests that the same storage factory can produce different storage instances
     by providing a factory key.
     """
-    from cacheplus.factories import memory_storage_factory
+    from cachex.factories import memory_storage_factory
     def mock_storage_factory(mock: MagicMock):
         def wrapper():
             mock()
@@ -325,7 +325,7 @@ async def test_factory_key_async():
     """Tests that the same storage factory can produce different storage instances
     by providing a factory key.
     """
-    from cacheplus.factories import async_memory_storage_factory
+    from cachex.factories import async_memory_storage_factory
     def mock_storage_factory(mock: MagicMock):
         async def wrapper():
             mock()

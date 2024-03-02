@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Any, TypeVar, TYPE_CHECKING
 
-from cacheplus._util import (
+from cachex._util import (
     get_cached_func_name,
     get_fqn_type,
     get_return_value_type,
 )
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

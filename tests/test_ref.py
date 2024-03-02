@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cacheplus import cache_reference
-from cacheplus.exceptions import UnhashableParamError
+from cachex import cache_reference
+from cachex.exceptions import UnhashableParamError
 
 
 def test_returns_same_object():

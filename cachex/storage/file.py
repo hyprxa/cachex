@@ -11,7 +11,7 @@ from typing import Union, cast, TYPE_CHECKING
 from anyio import Path as AsyncPath
 from anyio.to_thread import run_sync
 
-from cacheplus.storage.base import AsyncStorage, Storage, StoredValue
+from cachex.storage.base import AsyncStorage, Storage, StoredValue
 
 
 __all__ = ("FileStorage", "AsyncFileStorage")
@@ -78,7 +78,7 @@ class FileStorage(Storage, _FileCommon):
     """File based, synchronous key/value store."""
 
     def __init__(self, path: PathLike[str], key_prefix: str | None = None) -> None:
-        key_prefix = key_prefix or "cacheplus"
+        key_prefix = key_prefix or "cachex"
         self.path = SyncPath(path).joinpath(key_prefix)
         self.key_prefix = key_prefix
 
@@ -147,7 +147,7 @@ class AsyncFileStorage(AsyncStorage, _FileCommon):
     """File based, asynchronous key/value store."""
 
     def __init__(self, path: PathLike[str], key_prefix: str | None = None) -> None:
-        key_prefix = key_prefix or "cacheplus"
+        key_prefix = key_prefix or "cachex"
         self.path = AsyncPath(path).joinpath(key_prefix)
         self.key_prefix = key_prefix
 

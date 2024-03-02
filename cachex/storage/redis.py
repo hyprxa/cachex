@@ -9,10 +9,10 @@ try:
     from redis.asyncio import RedisCluster as AsyncRedisCluster
 except ImportError:
     raise RuntimeError(
-        "Missing required dependency: redis. " "Run `pip install 'cacheplus[redis]'`"
+        "Missing required dependency: redis. " "Run `pip install 'cachex[redis]'`"
     )
 
-from cacheplus.storage.base import AsyncStorage, Storage
+from cachex.storage.base import AsyncStorage, Storage
 
 
 __all__ = ("RedisStorage", "AsyncRedisStorage")
@@ -36,7 +36,7 @@ class _RedisCommon:
 
     def __init__(self, redis: Client, key_prefix: str | None = None) -> None:
         self._redis = redis  # type: ignore[var-annotated]
-        self.key_prefix: str = "cacheplus" if key_prefix is None else key_prefix
+        self.key_prefix: str = "cachex" if key_prefix is None else key_prefix
 
         self._delete_all_script = self._redis.register_script(  # type: ignore[var-annotated]
             b"""

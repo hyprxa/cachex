@@ -7,8 +7,8 @@ from functools import partial, partialmethod
 from types import MethodType
 from typing import Any, TypeVar, TYPE_CHECKING
 
-from cacheplus.exceptions import UnhashableParamError, UnhashableTypeError
-from cacheplus._hashing import update_hash
+from cachex.exceptions import UnhashableParamError, UnhashableTypeError
+from cachex._hashing import update_hash
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
     R = TypeVar("R")
 
-_LOGGER = logging.getLogger("cacheplus.core")
+_LOGGER = logging.getLogger("cachex.core")
 
 
 def make_value_key(

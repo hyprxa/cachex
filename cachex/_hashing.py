@@ -15,8 +15,8 @@ import weakref
 from enum import Enum
 from typing import Any, Pattern, Protocol, TYPE_CHECKING
 
-from cacheplus.exceptions import UnhashableTypeError
-from cacheplus._util import NoResult, is_type, repr_
+from cachex.exceptions import UnhashableTypeError
+from cachex._util import NoResult, is_type, repr_
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
