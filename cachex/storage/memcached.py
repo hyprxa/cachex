@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+from datetime import timedelta
 from functools import partial
 from typing import Any, Protocol, TypeVar, Union, cast, TYPE_CHECKING
 
@@ -10,7 +12,6 @@ __all__ = ("MemcachedStorage", "AsyncMemcachedStorage")
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
-    from datetime import timedelta
     from typing_extensions import ParamSpec, TypeAlias
 
     class MemcachedClient(Protocol):
@@ -144,14 +145,19 @@ class _MemcachedCommon:
     __slots__ = "_memcached"
 
     def __init__(self, memcached: Client) -> None:
-        self._memcached = memcached
+        self._memcached = memcached  # type: ignore[var-annotated]
 
     def _set(
         self, key: str, value: str | bytes, expires_in: int | timedelta | None = None
     ) -> Callable[[], Result[Any]]:
         if isinstance(value, str):
             value = value.encode("utf-8")
-        return partial(self._memcached.set, key, value, ex=expires_in)
+        if isinstance(expires_in, timedelta):
+            expires_in = math.ceil(expires_in.total_seconds())
+        elif expires_in is None:
+            expires_in = 0
+
+        return partial(self._memcached.set, key, value, expires_in)
 
     def _get(self, key: str) -> Callable[[], Result[bytes | None]]:
         return partial(self._memcached.get, key)
@@ -210,7 +216,7 @@ class MemcachedStorage(Storage, _MemcachedCommon):
 
     def close(self) -> None:
         """Close the underlying Memcached client."""
-        self._close()
+        self._close()()
 
 
 class AsyncMemcachedStorage(AsyncStorage, _MemcachedCommon):
@@ -257,4 +263,4 @@ class AsyncMemcachedStorage(AsyncStorage, _MemcachedCommon):
 
     async def close(self) -> None:
         """Close the underlying Memcached client."""
-        await self._close()
+        await self._close()()
