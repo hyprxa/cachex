@@ -98,7 +98,7 @@ class RedisStorage(Storage, _RedisCommon):
 
         Returns:
             The value associated with ``key`` if it exists and is not expired, else
-            None
+            ``None``
         """
         data = self._get(key)()
         return cast("bytes | None", data)
@@ -145,7 +145,7 @@ class AsyncRedisStorage(AsyncStorage, _RedisCommon):
 
         Returns:
             The value associated with ``key`` if it exists and is not expired, else
-            None
+            ``None``
         """
         data = await self._get(key)()  # type: ignore[misc]
         return cast("bytes | None", data)
