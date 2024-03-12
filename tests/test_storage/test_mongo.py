@@ -9,7 +9,7 @@ from cachex import async_mongo_storage_factory, mongo_storage_factory
 def test_set_get():
     """Test set and get operations."""
     storage = mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="get_set"
+        "mongodb://localhost:27017/cachex", key_prefix="get_set"
     )()
     val = b"test"
     storage.set("test", val)
@@ -22,7 +22,7 @@ def test_set_get():
 async def test_set_get_async():
     """Test set and get operations."""
     storage = async_mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="get_set_async"
+        "mongodb://localhost:27017/cachex", key_prefix="get_set_async"
     )()
     val = b"test"
     await storage.set("test", val)
@@ -34,7 +34,7 @@ async def test_set_get_async():
 def test_expires():
     """Test values expire."""
     storage = mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="expires"
+        "mongodb://localhost:27017/cachex", key_prefix="expires"
     )()
     val = b"test"
     storage.set("test", val, expires_in=1)
@@ -50,7 +50,7 @@ def test_expires():
 async def test_expires_async():
     """Test values expire."""
     storage = async_mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="expires_async"
+        "mongodb://localhost:27017/cachex", key_prefix="expires_async"
     )()
     val = b"test"
     await storage.set("test", val, expires_in=1)
@@ -65,7 +65,7 @@ async def test_expires_async():
 def test_delete():
     """Test values can be deleted."""
     storage = mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="delete"
+        "mongodb://localhost:27017/cachex", key_prefix="delete"
     )()
     val = b"test"
     storage.set("test", val)
@@ -81,7 +81,7 @@ def test_delete():
 async def test_delete_async():
     """Test values can be deleted."""
     storage = async_mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="delete_async"
+        "mongodb://localhost:27017/cachex", key_prefix="delete_async"
     )()
     val = b"test"
     await storage.set("test", val)
@@ -96,7 +96,7 @@ async def test_delete_async():
 def test_delete_all():
     """Test all values can be deleted."""
     storage = mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="delete_all"
+        "mongodb://localhost:27017/cachex", key_prefix="delete_all"
     )()
     val_1 = b"test_1"
     val_2 = b"test_2"
@@ -118,7 +118,7 @@ def test_delete_all():
 async def test_delete_all_async():
     """Test all values can be deleted."""
     storage = async_mongo_storage_factory(
-        "mongodb://localhost:27017/cacheplus", key_prefix="delete_all_async"
+        "mongodb://localhost:27017/cachex", key_prefix="delete_all_async"
     )()
     val_1 = b"test_1"
     val_2 = b"test_2"
