@@ -12,6 +12,8 @@ __all__ = (
     "async_mongo_storage_factory",
     "redis_storage_factory",
     "async_redis_storage_factory",
+    "memcached_storage_factory",
+    "async_memcached_storage_factory",
 )
 
 if TYPE_CHECKING:
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
         AsyncMemcachedClient,
         AsyncMemcachedStorage,
         MemcachedClient,
-        MemcachedStorage
+        MemcachedStorage,
     )
     from cachex.storage.memory import AsyncMemoryStorage, MemoryStorage
     from cachex.storage.mongo import AsyncMongoStorage, MongoStorage
@@ -205,7 +207,9 @@ def async_redis_storage_factory(
     return wrapper
 
 
-def memcached_storage_factory(client: MemcachedClient) -> Callable[[], MemcachedStorage]:
+def memcached_storage_factory(
+    client: MemcachedClient,
+) -> Callable[[], MemcachedStorage]:
     """Storage factory for :class: `MemcachedStorage <cacachex.storage.memcached.MemcachedStorage>`.
 
     Args:
@@ -219,7 +223,9 @@ def memcached_storage_factory(client: MemcachedClient) -> Callable[[], Memcached
     return wrapper
 
 
-def async_memcached_storage_factory(client: AsyncMemcachedClient) -> Callable[[], AsyncMemcachedStorage]:
+def async_memcached_storage_factory(
+    client: AsyncMemcachedClient,
+) -> Callable[[], AsyncMemcachedStorage]:
     """Storage factory for :class: `AsyncMemcachedStorage <cacachex.storage.memcached.AsyncMemcachedStorage>`.
 
     Args:
