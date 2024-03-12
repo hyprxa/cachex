@@ -6,6 +6,7 @@ import importlib
 import inspect
 import pickle
 import time
+import threading
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, TypeVar, Union, TYPE_CHECKING
@@ -20,6 +21,8 @@ except ImportError:
         "Missing required dependencies: motor, pymongo. "
         "Run `pip install 'cachex[mongo]'`"
     )
+
+import anyio
 
 from cachex.exceptions import ImproperlyConfiguredException
 from cachex.storage.base import AsyncStorage, Storage, StoredValue
@@ -54,55 +57,71 @@ DNE = datetime(year=2999, month=12, day=31)
 
 
 def _create_collection(
-    method: Callable[Concatenate[MongoStorage | AsyncMongoStorage, P], R | Awaitable[R]]
+    method: Callable[
+        Concatenate[MongoStorage | AsyncMongoStorage, P], R | Awaitable[R]
+    ],
 ) -> Callable[Concatenate[MongoStorage | AsyncMongoStorage, P], R | Awaitable[R]]:
     """Wraps a storage method and creates the collection if required."""
 
     def sync_wrapper(self: MongoStorage, *args: Any, **kwargs: Any) -> R:
-        if self._collection is not None:
+        if self._has_collection:
             return method(self, *args, **kwargs)
 
-        collection = self._mongo.get_default_database()[self.collection]
-        index_expires_at = IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0)
-        index_key = IndexModel([("key", TEXT)], unique=True)
-        call = partial(collection.create_indexes, [index_expires_at, index_key])
+        with self._lock:
+            if self._has_collection:
+                return method(self, *args, **kwargs)
 
-        try:
-            self._retry_for_auto_reconnect(call)
-        except OperationFailure as e:
-            raise ImproperlyConfiguredException(
-                "Unable to create indices on the collection. This is may "
-                "happen when attempting to use an existing collection with "
-                "competing indices on the same keys used as this storage instance. "
-                "Remove the indices from the existing collection or use a "
-                "different collection name."
-            ) from e
+            collection = self._mongo.get_default_database()[self.collection]
+            index_expires_at = IndexModel(
+                [("expiresAt", ASCENDING)], expireAfterSeconds=0
+            )
+            index_key = IndexModel([("key", TEXT)], unique=True)
+            call = partial(collection.create_indexes, [index_expires_at, index_key])
 
-        self._collection = collection
+            try:
+                self._retry_for_auto_reconnect(call)
+            except OperationFailure as e:
+                raise ImproperlyConfiguredException(
+                    "Unable to create indices on the collection. This may "
+                    "happen when attempting to use an existing collection with "
+                    "competing indices on the same keys used as this storage instance. "
+                    "Remove the indices from the existing collection or use a "
+                    "different collection name."
+                ) from e
 
-        return method(self, *args, **kwargs)
+            self._collection = collection
+            self._has_collection = True
+
+            return method(self, *args, **kwargs)
 
     async def async_wrapper(self: AsyncMongoStorage, *args: Any, **kwargs: Any) -> R:
-        if self._collection is not None:
+        if self._has_collection:
             return await method(self, *args, **kwargs)
 
-        collection = self._mongo.get_default_database()[self.collection]
-        index_expires_at = IndexModel([("expiresAt", ASCENDING)], expireAfterSeconds=0)
-        index_key = IndexModel([("key", TEXT)], unique=True)
-        call = partial(collection.create_indexes, [index_expires_at, index_key])
+        async with self._lock:
+            if self._has_collection:
+                return await method(self, *args, **kwargs)
 
-        try:
-            await self._retry_for_auto_reconnect_async(call)
-        except OperationFailure as e:
-            raise ImproperlyConfiguredException(
-                "Unable to create indices on the collection. This is may "
-                "happen when attempting to use an existing collection with "
-                "competing indices on the same keys used as this storage instance. "
-                "Remove the indices from the existing collection or use a "
-                "different collection name."
-            ) from e
+            collection = self._mongo.get_default_database()[self.collection]
+            index_expires_at = IndexModel(
+                [("expiresAt", ASCENDING)], expireAfterSeconds=0
+            )
+            index_key = IndexModel([("key", TEXT)], unique=True)
+            call = partial(collection.create_indexes, [index_expires_at, index_key])
 
-        self._collection = collection
+            try:
+                await self._retry_for_auto_reconnect_async(call)
+            except OperationFailure as e:
+                raise ImproperlyConfiguredException(
+                    "Unable to create indices on the collection. This may "
+                    "happen when attempting to use an existing collection with "
+                    "competing indices on the same keys used as this storage instance. "
+                    "Remove the indices from the existing collection or use a "
+                    "different collection name."
+                ) from e
+
+            self._collection = collection
+            self._has_collection = True
 
         return await method(self, *args, **kwargs)
 
@@ -141,6 +160,7 @@ class _MongoCommon:
         self._max_failures = max_failures
 
         self._collection: Collection | None = None
+        self._has_collection: bool = False
 
     def _set(
         self, key: str, value: str | bytes, expires_in: int | timedelta | None = None
@@ -233,6 +253,20 @@ class MongoStorage(Storage, _MongoCommon):
     exponential backoff strategy.
     """
 
+    def __init__(
+        self,
+        mongo: Client,
+        collection: str | None = None,
+        key_prefix: str | None = None,
+        max_backoff: float = DEFAULT_CAP,
+        base_backoff: float = DEFAULT_BASE,
+        max_failures: int = MAX_FAILURES,
+    ) -> None:
+        super().__init__(
+            mongo, collection, key_prefix, max_backoff, base_backoff, max_failures
+        )
+        self._lock = threading.Lock()
+
     @_create_collection
     def set(
         self, key: str, value: str | bytes, expires_in: int | timedelta | None = None
@@ -296,6 +330,20 @@ class AsyncMongoStorage(AsyncStorage, _MongoCommon):
     :class: `pymongo.errors.AutoReconnect` exception using an
     exponential backoff strategy.
     """
+
+    def __init__(
+        self,
+        mongo: Client,
+        collection: str | None = None,
+        key_prefix: str | None = None,
+        max_backoff: float = DEFAULT_CAP,
+        base_backoff: float = DEFAULT_BASE,
+        max_failures: int = MAX_FAILURES,
+    ) -> None:
+        super().__init__(
+            mongo, collection, key_prefix, max_backoff, base_backoff, max_failures
+        )
+        self._lock = anyio.Lock()
 
     @_create_collection
     async def set(
