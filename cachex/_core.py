@@ -88,7 +88,7 @@ def make_function_key(func: Callable[P, R]) -> str:
 
     if isinstance(func, (partial, partialmethod)):
         func = func.func
-    
+
     # Include the function's __module__ and __qualname__ strings in the hash.
     # This means that two identical functions in different modules
     # will not share a hash; it also means that two identical nested

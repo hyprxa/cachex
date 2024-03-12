@@ -29,8 +29,7 @@ _CYCLE_PLACEHOLDER = b"hyprxa-letsbuildkickassopensourcesoftware"
 
 
 class Hasher(Protocol):
-    def update(self, __data: Buffer, /) -> None:
-        ...
+    def update(self, __data: Buffer, /) -> None: ...
 
 
 def update_hash(
@@ -78,9 +77,9 @@ class HashStacks:
     """Stacks of what has been hashed, with at most 1 stack per thread."""
 
     def __init__(self) -> None:
-        self._stacks: weakref.WeakKeyDictionary[
-            threading.Thread, HashStack
-        ] = weakref.WeakKeyDictionary()
+        self._stacks: weakref.WeakKeyDictionary[threading.Thread, HashStack] = (
+            weakref.WeakKeyDictionary()
+        )
 
     def __repr__(self) -> str:
         return repr_(self)

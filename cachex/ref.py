@@ -27,7 +27,7 @@ _ref_storage: dict[str, Any] = {}
 
 
 def cache_reference(
-    type_encoders: Mapping[type, Callable[[Any], Any]] | None = None
+    type_encoders: Mapping[type, Callable[[Any], Any]] | None = None,
 ) -> Callable[[Callable[P, R | Awaitable[R]]], Callable[P, R | Awaitable[R]]]:
     """Cache a reference to the return object of the decorated callable.
 

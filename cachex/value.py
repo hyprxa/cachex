@@ -37,19 +37,22 @@ def _wrap_factory(storage_factory: Callable[[], Storage]) -> Callable[[str], Sto
     """Wraps a storage factory and returns the factory but accepts an
     additional string argument as a unique key for different partials.
     """
+
     def wrapper(factory_key: str | None) -> Storage:
         storage = storage_factory()
         _LOGGER.debug("Created new storage instance for key: %s", factory_key)
         return storage
+
     return wrapper
 
 
 def _wrap_factory_async(
-    storage_factory: Callable[[], AsyncStorage | Awaitable[AsyncStorage]]
+    storage_factory: Callable[[], AsyncStorage | Awaitable[AsyncStorage]],
 ) -> Callable[[str], Awaitable[AsyncStorage]]:
     """Wraps a storage factory and returns the factory but accepts an
     additional string argument as a unique key for different partials.
     """
+
     async def wrapper(factory_key: str | None) -> Storage:
         if inspect.iscoroutinefunction(storage_factory):
             storage = await storage_factory()
@@ -57,8 +60,9 @@ def _wrap_factory_async(
             storage = storage_factory()
         _LOGGER.debug("Created new storage instance for key: %s", factory_key)
         return storage
+
     return wrapper
-    
+
 
 class _NullLock:
     def __enter__(self) -> None:
@@ -81,7 +85,7 @@ class cache_value:
     Every caller gets its own copy of the cached value.
 
     This decorator works with sync functions.
-    
+
     By default, calls can execute concurrently so it is possible for a function called
     concurrently with identical arguments to run more than once. If this behavior is not
     acceptable for your use case, you can force concurrent calls to be executed serially
@@ -116,7 +120,7 @@ class cache_value:
     ) -> None:
         self._factory = cast(
             "Callable[[str | None], Storage]",
-            cache_reference()(_wrap_factory(storage_factory))
+            cache_reference()(_wrap_factory(storage_factory)),
         )
         self._type_encoders = type_encoders
         self._expires_in = expires_in

@@ -19,6 +19,12 @@ if TYPE_CHECKING:
     from os import PathLike
 
     from cachex.storage.file import AsyncFileStorage, FileStorage
+    from cachex.storage.memcached import (
+        AsyncMemcachedClient,
+        AsyncMemcachedStorage,
+        MemcachedClient,
+        MemcachedStorage
+    )
     from cachex.storage.memory import AsyncMemoryStorage, MemoryStorage
     from cachex.storage.mongo import AsyncMongoStorage, MongoStorage
     from cachex.storage.redis import AsyncRedisStorage, RedisStorage
@@ -195,5 +201,33 @@ def async_redis_storage_factory(
     def wrapper() -> AsyncRedisStorage:
         redis = Redis.from_url(url, **client_kwargs)
         return AsyncRedisStorage(redis, key_prefix=key_prefix)
+
+    return wrapper
+
+
+def memcached_storage_factory(client: MemcachedClient) -> Callable[[], MemcachedStorage]:
+    """Storage factory for :class: `MemcachedStorage <cacachex.storage.memcached.MemcachedStorage>`.
+
+    Args:
+        client: The memcached client to use with the storage
+    """
+    from cachex.storage.memcached import MemcachedStorage
+
+    def wrapper() -> MemcachedStorage:
+        return MemcachedStorage(client)
+
+    return wrapper
+
+
+def async_memcached_storage_factory(client: AsyncMemcachedClient) -> Callable[[], AsyncMemcachedStorage]:
+    """Storage factory for :class: `AsyncMemcachedStorage <cacachex.storage.memcached.AsyncMemcachedStorage>`.
+
+    Args:
+        client: The memcached client to use with the storage
+    """
+    from cachex.storage.memcached import AsyncMemcachedStorage
+
+    def wrapper() -> AsyncMemcachedStorage:
+        return AsyncMemcachedStorage(client)
 
     return wrapper
