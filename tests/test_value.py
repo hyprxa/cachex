@@ -279,39 +279,32 @@ def test_factory_key():
     by providing a factory key.
     """
     from cachex.factories import memory_storage_factory
+
     def mock_storage_factory(mock: MagicMock):
         def wrapper():
             mock()
             return memory_storage_factory()()
+
         return wrapper
-    
+
     mock = MagicMock()
     cache_mock = MagicMock()
 
-    @cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_1"
-    )
+    @cache_value(storage_factory=mock_storage_factory(mock), factory_key="memcache_1")
     def echo_1(i: int) -> int:
         cache_mock(i)
         return i
 
-    @cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_2"
-    )
+    @cache_value(storage_factory=mock_storage_factory(mock), factory_key="memcache_2")
     def echo_2(i: int) -> int:
         cache_mock(i)
         return i
-    
-    @cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_2"
-    )
+
+    @cache_value(storage_factory=mock_storage_factory(mock), factory_key="memcache_2")
     def echo_3(i: int) -> int:
         cache_mock(i)
         return i
-    
+
     echo_1(1)
     echo_2(2)
     echo_3(3)
@@ -326,39 +319,38 @@ async def test_factory_key_async():
     by providing a factory key.
     """
     from cachex.factories import async_memory_storage_factory
+
     def mock_storage_factory(mock: MagicMock):
         async def wrapper():
             mock()
             return async_memory_storage_factory()()
+
         return wrapper
-    
+
     mock = MagicMock()
     cache_mock = MagicMock()
 
     @async_cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_1"
+        storage_factory=mock_storage_factory(mock), factory_key="memcache_1"
     )
     async def echo_1(i: int) -> int:
         cache_mock(i)
         return i
 
     @async_cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_2"
+        storage_factory=mock_storage_factory(mock), factory_key="memcache_2"
     )
     async def echo_2(i: int) -> int:
         cache_mock(i)
         return i
-    
+
     @async_cache_value(
-        storage_factory=mock_storage_factory(mock),
-        factory_key="memcache_2"
+        storage_factory=mock_storage_factory(mock), factory_key="memcache_2"
     )
     async def echo_3(i: int) -> int:
         cache_mock(i)
         return i
-    
+
     await echo_1(1)
     await echo_2(2)
     await echo_3(3)
