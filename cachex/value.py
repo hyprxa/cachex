@@ -53,7 +53,7 @@ def _wrap_factory_async(
     additional string argument as a unique key for different partials.
     """
 
-    async def wrapper(factory_key: str | None) -> Storage:
+    async def wrapper(factory_key: str | None) -> AsyncStorage:
         if inspect.iscoroutinefunction(storage_factory):
             storage = await storage_factory()
         else:
@@ -232,7 +232,7 @@ class async_cache_value:
         factory_key: str | None = None,
     ) -> None:
         self._factory = cast(
-            "Callable[[str | None], Awaitable[Storage]]",
+            "Callable[[str | None], AsyncStorage | Awaitable[AsyncStorage]]",
             cache_reference()(_wrap_factory_async(storage_factory)),
         )
         self._type_encoders = type_encoders

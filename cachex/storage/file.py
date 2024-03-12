@@ -56,7 +56,7 @@ class _FileCommon:
     def _write(self, target_file: Path, stored_value: StoredValue) -> None:
         try:
             tmp_file_fd, tmp_file_name = tempfile.mkstemp(
-                dir=self.path,
+                dir=self.path,  # type: ignore[attr-defined]
                 prefix=f"{target_file.name}.tmp",  # type: ignore[attr-defined]
             )
             renamed = False
