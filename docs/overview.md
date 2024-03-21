@@ -1,0 +1,2 @@
+# How It Works
+When a decorated method is called, Cachex creates a hash from all the inputs and checks the storage backend for the computed hash. If there is hit, the cached value is returned. If there is a miss, the called function executes and the return value is cached.

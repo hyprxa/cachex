@@ -1,0 +1,2 @@
+# Object Caching
+`cachex.cache_reference` is an easy way to cache unhashable objects and make them available globally throughout an application (think DB connections, HTTP clients, ML models, etc.). It is a very easy way to implement the singleton design pattern. Both sync and async functions are supported and this allows for lazy initialization of objects as well as dynamic configuration of client-like objects based user input.
