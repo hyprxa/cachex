@@ -14,9 +14,11 @@ Cachex is a modern caching library for Python 3 built from the ground up to supp
 No additional dependencies are required for Memcached support. Unlike Redis and MongoDB, there is not a single client library supported by the core dev team and most libraries do not support both sync and async API's. For that reason, the Memcached storage backend is implemented as an interface based API. You bring your own client, and as long as that client adheres to the `MemcachedClient` or `AsyncMemcachedClient` interfaces it will work with Cachex.
 
 ## Typing Support
-Cachex was built to work with Python 3.6+ type declarations. This means it offers great editor support for decorated functions. It also means that Cachex plays nicely with other popular libraries that rely heavily on typing. [FastAPI](https://fastapi.tiangolo.com/tutorial/dependencies/) and [Litestar](https://docs.litestar.dev/2/usage/dependency-injection.html) are two popular ASGI web frameworks that offer powerful dependency injection systems which rely on type hints (via [Pydantic](https://docs.pydantic.dev/latest/)). Cachex can be inserted anywhere in a dedendency chain and it will "just work". This offers tremendous flexibility to the developer when designing applications.
+Cachex was built to work with type declarations. This means it offers great editor support for decorated functions. It also means that Cachex plays nicely with other popular libraries that rely heavily on typing. [FastAPI](https://fastapi.tiangolo.com/tutorial/dependencies/) and [Litestar](https://docs.litestar.dev/2/usage/dependency-injection.html) are two popular ASGI web frameworks that offer powerful dependency injection systems which rely on type hints (via [Pydantic](https://docs.pydantic.dev/latest/)). Cachex can be inserted anywhere in a dedendency chain and it will "just work". This offers tremendous flexibility to the developer when designing applications.
 
 ### Basic Example
+The example below is very simple (and mostly useless) web server intended to give you a feel for how Cachex works and how it's native typing support can be leveraged in a dependency chain.
+
 ```python
 from enum import Enum
 from typing import Annotated
@@ -47,6 +49,8 @@ def get_url(dataset: DataSet) -> AnyHttpUrl:
     return URLS[dataset]
 
 
+# We want to cache the result of the download and use that as a dependency.
+# Notice, AnyHttpUrl is not natively hashable by cachex so we need to provide a type encoder
 @cache_value(type_encoders={Url: lambda t: t.unicode_string()})
 def download_csv_data(url: Annotated[AnyHttpUrl, Depends(get_url)]) -> pd.DataFrame:
     """Download a CSV file from the given URL and convert it to a DataFrame."""
@@ -60,8 +64,8 @@ def get_dataset(df: Annotated[pd.DataFrame, Depends(download_csv_data)]):
     return Response(content=data, media_type="application/json")
 ```
 
-Save the script, call it `main.py`. Run the app with `uvicorn main:app` and head to the docs (`/docs`). The swagger docs show the correct API arguments and types through the dependency chain
+Save the file, call it `main.py`. Run the app with `uvicorn main:app` and head to the docs (`/docs`). The swagger docs show the correct API arguments and types through the dependency chain...
 
 ![Alt text](/docs/img/simple_app_docs.png)
 
-Next, try the `/datasets/uber1` endpoint. Depending on your internet connection, this may take 2-30 seconds to run. After it runs once, run it again, the response should load almost instantly! You can then repeat this with the `/datasets/uber2` and `datasets/uber3` endpoints.
+Next, try the `/datasets/uber1` endpoint. Depending on your internet connection, this may take 2-30 seconds to run. After it runs once, run it again, the response should load almost instantly! You can then repeat this with the `/datasets/uber2` and `datasets/uber3` endpoints if you'd like.
