@@ -1,14 +1,3 @@
-# Data Caching
-Typically, when using Cachex, you will be caching data - HTTP response data, database query results, ML model outputs etc. are common datasets that you would want to cache. In those cases you will be using the `cache_value` and `async_cache_value` API's for sync and async contexts respectively.
-
-Cachex uses `pickle` to serialize the return value of a deorated function. This has a few implications, though none more important than this...
-
-**Only ever use Cachex in trusted environments. The `pickle` module is not secure and you should only ever unpickle data you trust**
-
-Using `pickle` also means...
-- The data is stored in a binary format which means that ***any storage service*** can be used to store cached data, even ones not officially supported by Cachex
-- Every cache hit returns a ***copy*** of the original data. This means multiple handlers can mutate the data without side effects
-```python
 import asyncio
 import time
 
@@ -83,4 +72,3 @@ if __name__ == "__main__":
 
     print(f"main_sync: executed in {sync_end-sync_start} seconds (should be ~3 seconds)")
     print(f"main_async: executed in {async_end-async_start} seconds (should be ~3 seconds)")
-```

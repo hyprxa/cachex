@@ -1,7 +1,7 @@
 # Type Encoders
-Cachex can natively encode built in types (int, float, str, dict, list, etc.) when creating a hash. However, for custom types, Cachex doesn't know how to produce a stable hash. In those case there are two options.
+Cachex can natively encode built in types (int, float, str, dict, list, etc.) when creating a hash. However, for custom types, Cachex doesn't know how to produce a stable hash. In those cases there are two options.
 
-1. Name the unhashable argument with a leading underscore. Cachex will ignore this object when producing the input argument hash. This option should only be used where it doesn't make sense for an argument to considered part of the hash such as an HTTP or database connection.
+1. Name the unhashable argument with a leading underscore. Cachex will ignore this object when producing the input argument hash. This option should only be used where it doesn't make sense for an argument to be considered part of the hash such as an HTTP or database connection.
 
 ```python
 from http.client import HTTPSConnection
@@ -20,7 +20,7 @@ def main():
     do_something(conn, "/hyprxa")
 ```
 
-2. Use a type encoder to convert the custom type into a native type that can be encoded by Cachex. This is the preferred method in most cases. A type encoder is a mapping of type to a callable that returns an encodeable object. You can have multiple type enccoders in a single decorated function.
+2. Use a type encoder to convert the custom type into a native type that can be encoded by Cachex. This is the preferred method in most cases. A type encoder is a mapping of type to a callable that returns an encodeable object. You can have multiple type encoders in a single decorated function.
 
 ```python
 from pydantic import AnyHttpUrl
