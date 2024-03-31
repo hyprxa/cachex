@@ -128,6 +128,7 @@ class cache_value:
         self._factory_key = factory_key
 
         self._storage: Storage | None = None
+        self._storage_lock = threading.Lock()
 
     def __call__(self, func: Callable[P, R]) -> Callable[P, R]:
         if inspect.iscoroutinefunction(func):
@@ -145,11 +146,15 @@ class cache_value:
         def wrapper(*args: Any, **kwargs: Any) -> R:
             # This ``None`` value check is faster than acquiring the two
             # locks required for ``cache_reference``
-            if self._storage is None:
-                storage = self._factory(self._factory_key)
-                self._storage = storage
-            else:
+            if self._storage is not None:
                 storage = self._storage
+            else:
+                with self._storage_lock:
+                    if self._storage is not None:
+                        storage = self._storage
+                    else:
+                        storage = self._factory(self._factory_key)
+                        self._storage = storage
 
             with lock:
                 key = make_value_key(
@@ -241,6 +246,7 @@ class async_cache_value:
         self._factory_key = factory_key
 
         self._storage: AsyncStorage | None = None
+        self._storage_lock = anyio.Lock()
         self._is_async = inspect.iscoroutinefunction(self._factory)
 
     def __call__(self, func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
@@ -259,14 +265,18 @@ class async_cache_value:
         async def wrapper(*args: Any, **kwargs: Any) -> R:
             # This ``None`` value check is faster than acquiring the two
             # locks required for ``cache_reference``
-            if self._storage is None:
-                if self._is_async:
-                    storage = await self._factory(self._factory_key)  # type: ignore[misc]
-                else:
-                    storage = self._factory(self._factory_key)
-                self._storage = cast("AsyncStorage", storage)
-            else:
+            if self._storage is not None:
                 storage = self._storage
+            else:
+                async with self._storage_lock:
+                    if self._storage is not None:
+                        storage = self._storage
+                    else:
+                        if self._is_async:
+                            storage = await self._factory(self._factory_key)  # type: ignore[misc]
+                        else:
+                            storage = self._factory(self._factory_key)
+                        self._storage = cast("AsyncStorage", storage)
 
             async with lock:
                 key = make_value_key(
