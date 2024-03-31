@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Annotated
 
-from cachex import cache_reference
+from cachex import cche_reference
 from fastapi import Depends, FastAPI
 
 
@@ -24,6 +24,9 @@ def get_conn(user: str) -> sqlite3.Connection:
     return conn
 
 
+# This is an intentionally simple and insecure example intended to demonstrate how to use
+# the `cache_reference` API. In a real application, users should be authenticated and authorized
+# to access the data
 @app.get("/name/{user}")
 def get_movie_name(conn: Annotated[sqlite3.Connection, Depends(get_conn)]) -> str:
     """Query data from the user's database."""

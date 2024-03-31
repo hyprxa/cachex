@@ -1,11 +1,10 @@
 # Object Caching
-There are certain scenarios where you may want to cache an object such as a database connection, HTTP client or ML model. `cachex.cache_reference` is an easy way to cache unhashable objects and make them available globally throughout an application. It is a very easy way to implement the singleton design pattern. Both sync and async functions are supported.
+There are certain scenarios where you may want to cache an object such as a database connection, HTTP client or ML model. `cache_reference` is an easy way to cache unhashable objects and make them available globally throughout an application. It is a very easy way to implement the singleton design pattern and initialize application state. Both sync and async functions are supported.
 
-Singletons are fairly common in web API's (anyone who has used SQLAlchemy will probably remember this `engine = create_engine("sqlite+pysqlite:///:memory:")`). The engine is an object that you declare at the module level and use throughout your application. Not all objects are designed to be initialized this way. In many cases, a global object needs to be initialized in a function. Global(like) objects are discussed in the FastAPI documentation. The recommended solution is to use [lifespan events](https://fastapi.tiangolo.com/advanced/events/) and store your objects the application's `state` attribute or a global collection. In many cases, this is the correct solution. If your API is serving an ML model, the model should be loaded on application start.
+[Lifespan Events](https://fastapi.tiangolo.com/advanced/events/#use-case) are a common way to initialize application state on start and clean up resources on close. In **most** cases, this is the correct approach. `cache_reference` is not a replacement for lifespan events. It is useful in certain situations, for example...
 
-
-- **Lazy Initialization**: Creating objects when needed on demand ensures resources are not unecessarily allocated. If the initialization of an object is not prohibitively slow, and is only used for a subset of endpoints, it may make sense initialize that object when needed rather than on application start.
-- **Dynamic Configuration**: The configuration of an object may vary based on user input (or the user themselves). It may not be feasible to initialize all objects at startup. The example below illustrates a per-user database configuration using SQLLite (in a real application you'd want to authenticate the user and make sure only authenticated users are accessing their data)...
+- **Lazy Initialization**: Creating objects when needed on demand ensures resources are not unecessarily allocated. If the initialization of an object is not prohibitively slow, and is only used for a subset of endpoints, it may make sense to initialize that object when needed rather than on application start.
+- **Dynamic Configuration**: The configuration of an object may vary based on user input (or the user themselves). It may not be feasible to initialize all objects at startup. The example below illustrates a per-user database configuration using `sqlite3`...
 
 ```python
 import sqlite3
@@ -34,6 +33,9 @@ def get_conn(user: str) -> sqlite3.Connection:
     return conn
 
 
+# This is an intentionally simple and insecure example intended to demonstrate how to use
+# the `cache_reference` API. In a real application, users should be authenticated and authorized
+# to access the data
 @app.get("/name/{user}")
 def get_movie_name(conn: Annotated[sqlite3.Connection, Depends(get_conn)]) -> str:
     """Query data from the user's database."""
