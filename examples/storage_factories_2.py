@@ -1,7 +1,7 @@
 from cachex import cache_value, redis_storage_factory
 
 
-REDIS_URL = "redis://localhost:6379/
+REDIS_URL = "redis://localhost:6379/"
 
 
 @cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_first"), factory_key="called_first")

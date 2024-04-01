@@ -67,7 +67,7 @@ if __name__ == "__main__":
     sync_end = timeit.default_timer()
 
     async_start = timeit.default_timer()
-    asyncio.run(main_async)
+    asyncio.run(main_async())
     async_end = timeit.default_timer()
 
     print(f"main_sync: executed in {sync_end-sync_start} seconds (should be ~3 seconds)")

@@ -69,3 +69,9 @@ Save the file, call it `main.py`. Run the app with `uvicorn main:app` and head t
 ![Alt text](/docs/img/simple_app_docs.png)
 
 Next, try the `/datasets/uber1` endpoint. Depending on your internet connection, this may take 2-30 seconds to run. After it runs once, run it again, the response should load almost instantly! You can then repeat this with the `/datasets/uber2` and `datasets/uber3` endpoints if you'd like.
+
+## Documentation
+- [Data Caching](/docs/data_caching.md)
+- [Object Caching](/docs/object_caching.md)
+- [Type Encoders](/docs/type_encoders.md)
+- [Storage Factories and Factory Keys](/docs/storage_factories.md)

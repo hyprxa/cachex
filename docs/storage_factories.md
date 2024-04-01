@@ -12,7 +12,7 @@ from cachex import (
 )
 
 
-REDIS_URL = "redis://localhost:6379/
+REDIS_URL = "redis://localhost:6379/"
 
 
 @cache_value(storage_factory=redis_storage_factory(REDIS_URL))
@@ -63,7 +63,7 @@ def redis_storage_factory(
 from cachex import cache_value, redis_storage_factory
 
 
-REDIS_URL = "redis://localhost:6379/
+REDIS_URL = "redis://localhost:6379/"
 
 
 @cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_first"))
@@ -109,7 +109,7 @@ In order to differentiate the configurations we need to provide a *factory key*.
 from cachex import cache_value, redis_storage_factory
 
 
-REDIS_URL = "redis://localhost:6379/
+REDIS_URL = "redis://localhost:6379/"
 
 
 @cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_first"), factory_key="called_first")

@@ -14,3 +14,7 @@ def get_something(_conn: HTTPSConnection, path: str) -> bytes:
 def main():
     conn = HTTPSConnection("github.com")
     print(get_something(conn, "/hyprxa"))
+
+
+if __name__ == "__main__":
+    main()

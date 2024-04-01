@@ -13,3 +13,7 @@ def download_data(url: AnyHttpUrl) -> str:
     # type is `pydantic_core.Url` so thats why we use `Url` instead of
     # `AnyHttpUrl` in the decorator
     return url.unicode_string()
+
+
+if __name__ == "__main__":
+    print(download_data(AnyHttpUrl("https://github.com/hyprxa/piwebx")))

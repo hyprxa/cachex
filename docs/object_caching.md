@@ -10,7 +10,7 @@ There are certain scenarios where you may want to cache an object such as a data
 import sqlite3
 from typing import Annotated
 
-from cachex import cche_reference
+from cachex import cache_reference
 from fastapi import Depends, FastAPI
 
 
@@ -24,7 +24,7 @@ def get_conn(user: str) -> sqlite3.Connection:
     # Just for the sake of the example we will create a table and populate some data.
     # It will be the same data for all users
     cur = conn.cursor()
-    cur.execute("CREATE TABLE movie(title, year, score)")
+    cur.execute("CREATE TABLE IF NOT EXISTS movie(title, year, score)")
     cur.execute("""
         INSERT INTO movie VALUES
             ('Monty Python and the Holy Grail', 1975, 8.2),
@@ -40,6 +40,6 @@ def get_conn(user: str) -> sqlite3.Connection:
 def get_movie_name(conn: Annotated[sqlite3.Connection, Depends(get_conn)]) -> str:
     """Query data from the user's database."""
     cur = conn.cursor()
-    result = cur.execute("SELECT title FRON movie")
+    result = cur.execute("SELECT title FROM movie")
     return result.fetchone()[0]
 ```

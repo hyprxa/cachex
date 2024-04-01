@@ -1,5 +1,7 @@
 # Data Caching
 Typically, when using `cachex`, you will be caching data - HTTP response data, database query results, ML model outputs etc. are common datasets that you would want to cache. In those cases you will be using the `cache_value` and `async_cache_value` API's for sync and async contexts respectively.
+
+`cachex` uses the [cache aside pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside) exclusively. This may be expanded in the future.
 ## `pickle`
 `cachex` uses `pickle` to serialize the return value of a deorated function. This has a few implications, though none more important than this...
 
@@ -79,7 +81,7 @@ if __name__ == "__main__":
     sync_end = timeit.default_timer()
 
     async_start = timeit.default_timer()
-    asyncio.run(main_async)
+    asyncio.run(main_async())
     async_end = timeit.default_timer()
 
     print(f"main_sync: executed in {sync_end-sync_start} seconds (should be ~3 seconds)")
@@ -87,3 +89,81 @@ if __name__ == "__main__":
 ```
 
 ## Expiration
+The data caching API supports time based expiration policies. The implementation details are dependent on the storage backend used but *all* backends support time based expiration.
+
+```python
+from datetime import datetime
+
+from cachex import cache_value
+
+
+@cache_value(expires_in=2)
+def now() -> datetime:
+    return datetime.now()
+
+
+if __name__ == "__main__":
+    import time
+    print(now().isoformat())
+    time.sleep(1)
+    print(now().isoformat()) # This is the same time as the first call
+    time.sleep(1.01)
+    print(now().isoformat()) # The time is now updated because the old result expired
+```
+
+## Concurrency
+By default, `cachex` does not lock concurrent calls to a function. In most cases you dont want that. But, this does mean that depending on the function implementation, the same input can produce a different output. For example...
+
+```python
+import asyncio
+import random
+from datetime import datetime
+
+from cachex import async_cache_value
+
+
+@async_cache_value()
+async def now() -> datetime:
+    await asyncio.sleep(random.uniform(0.1, 1.1))
+    return  datetime.now()
+
+
+async def main() -> None:
+    results = await asyncio.gather(now(), now())
+    for result in results:
+        print(result.isoformat())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+In the above example, if `async_cache_value` locked the concurrent calls, we would get the exact same result twice. Run the script though and you will notice that two different times are printed. The `now` function is *time variant* meaning its output changes based on *when* its called. There are many cases where a function can be time variant. In a live system, database queries become time variant as users update data.
+
+If you do want to force synchronous access to guard against time variance you can disable concurrency by setting `allow_concurrent=False`. This will ensure that two calls to a function with the same input are guarenteed to produce the same output.
+
+**Note: This will impact performance.**
+
+```python
+import asyncio
+import random
+from datetime import datetime
+
+from cachex import async_cache_value
+
+
+@async_cache_value(allow_concurrent=False)
+async def now() -> datetime:
+    await asyncio.sleep(random.uniform(0.1, 1.1))
+    return  datetime.now()
+
+
+async def main() -> None:
+    results = await asyncio.gather(now(), now())
+    for result in results:
+        print(result.isoformat())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
