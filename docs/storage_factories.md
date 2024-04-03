@@ -139,6 +139,7 @@ if __name__ == "__main__":
     shutil.rmtree("prod")
     shutil.rmtree("dev")
 ```
+```
 True
 True
 ```
