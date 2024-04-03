@@ -57,78 +57,88 @@ def redis_storage_factory(
 ```
 
 # Factory Keys
-`Storage` and `AsyncStorage` implementations usually involve a client object (`RedisStorage` uses a `redis.Redis` client under the hood). It would be very inefficient to create a new storage backend on every call to a cached function. Instead, we want to reuse the backend (and its client connection(s)). Therefore, under the hood, storage factories are wrapped in a call to `cache_reference`. This ensures we only create a single storage instance (thus reusing the underlying client objects). However, this implementation also leads to some unintuitive side effects. For example...
+`Storage` and `AsyncStorage` implementations are meant to be re-used across different calls as most storage backend implentations use TCP clients and file handles. It would be very inefficient to create a new storage backend on every call to a cached function. Instead, we want to reuse the backend. Therefore, under the hood, storage factories are wrapped in a call to `cache_reference`. This ensures we only create a single storage instance (thus reusing the underlying client objects). However, this implementation also leads to some unintuitive side effects. For example...
 
 ```python
-from cachex import cache_value, redis_storage_factory
+from cachex import cache_value, file_storage_factory
 
 
-REDIS_URL = "redis://localhost:6379/"
+@cache_value(storage_factory=file_storage_factory("prod"))
+def foo(n: int) -> int:
+    return n
 
 
-@cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_first"))
-def static(n: int) -> int:
-    return 7
-
-
-@cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_second"))
-def echo(n: int) -> int:
+@cache_value(storage_factory=file_storage_factory("dev"))
+def bar(n: int) -> int:
     return n
 
 
 if __name__ == "__main__":
-    print(static(1))
-    print(echo(1))
+    import os
+    import pathlib
+    import shutil
+    foo(1), bar(1)
+    print(pathlib.Path("prod").exists())
+    print(pathlib.Path("dev").exists())
+    print(len(os.listdir("prod/cachex")))
+    shutil.rmtree("prod")
 ```
 
 If you run this, the output will be...
 ```
-7
-7
+True
+False
+2
 ```
 
-This is unintuitve because we defined a `key_prefix` which should partition the key spaces and the calls `static(1)` and `echo(1)` should generate cache keys like `called_first:hash(1)` and `called_second(hash(1))` respectively. Instead there is a cache hit so instead of getting `7` and `1` as outputs we get `7` and `7` because `echo(1)` returns the cached value from `static(1)`.
+This is unintuitve because we defined two different paths that should have created two directories, `~/prod` and `~/dev` but instead we only get one directory and it holds 2 files which are the cached values from our two function calls.
 
-So why does this happen? Remember that a storage factory is a zero argument callable that returns a storage backend. And, in order to not create a new storage backend on every call, the factory function is wrapped in `cache_reference` under the hood. The signature looks like `cache_reference(Callable[[], Storage | AsyncStorage])()`. Do you see the issue? `cache_reference` doesn't know that the `key_prefix` argument is different because `redis_storage_factory` is just a wrapper that returns a callable. Utimately it looks like two different storage backends are being configured but only one is ever created and it will have the configuration of whichever function is called first. For example, if we switch the order in which we call `static` and `echo`...
+So why does this happen? Remember that a storage factory is a zero argument callable that returns a storage backend. And, in order to not create a new storage backend on every call, the factory function is wrapped in `cache_reference` under the hood. The signature looks like `cache_reference(Callable[[], Storage | AsyncStorage])()`. Do you see the issue? `cache_reference` doesn't know that the paths are different because `file_storage_factory` is just a wrapper that returns a callable. Utimately it looks like two different storage backends are being configured but only ***one is ever created*** and it will have the configuration of whichever function is called first. For example, if we switch the order in which we call `foo` and `bar`...
 
 ```python
 if __name__ == "__main__":
-    print(echo(1))
-    print(static(1))
+    import os
+    import pathlib
+    import shutil
+    bar(1), foo(1)
+    print(pathlib.Path("prod").exists())
+    print(pathlib.Path("dev").exists())
+    print(len(os.listdir("dev/cachex")))
+    shutil.rmtree("dev")
 ```
 
 The outut will be...
 ```
-1
-1
+False
+True
+2
 ```
 
-In order to differentiate the configurations we need to provide a *factory key*...
+Now the `~/dev` path is the one being created and holding our cached data. In order to differentiate the configurations we need to provide a *factory key*. A factory key tells `cache_reference` that the configurations are different and a new storage backend should be created...
 
 ```python
-from cachex import cache_value, redis_storage_factory
+from cachex import cache_value, file_storage_factory
 
 
-REDIS_URL = "redis://localhost:6379/"
+@cache_value(storage_factory=file_storage_factory("prod"), factory_key="prod")
+def foo(n: int) -> int:
+    return n
 
 
-@cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_first"), factory_key="called_first")
-def static(n: int) -> int:
-    return 7
-
-
-@cache_value(storage_factory=redis_storage_factory(REDIS_URL, key_prefix="called_second"), factory_key="called_first")
-def echo(n: int) -> int:
+@cache_value(storage_factory=file_storage_factory("dev"), factory_key="dev")
+def bar(n: int) -> int:
     return n
 
 
 if __name__ == "__main__":
-    print(static(1))
-    print(echo(1))
+    import pathlib
+    import shutil
+    foo(1), bar(1)
+    print(pathlib.Path("prod").exists())
+    print(pathlib.Path("dev").exists())
+    shutil.rmtree("prod")
+    shutil.rmtree("dev")
 ```
-
-Now when we run this, we get the expected result...
-```
-7
-1
+True
+True
 ```
